@@ -13,6 +13,10 @@
     <div>
 
         <span>Informe seu nome: </span><input type="text" name="name" id="name" value="Dionésio Guerra">
+        <br>
+        <span>Canal 1 </span><button onclick="subscribe('canal1')">Entrar</button>
+        <br>
+        <span>Canal 2 </span><button onclick="subscribe('canal2')">Entrar</button>
         <br><br>
         <textarea name="chat" id="chat" cols="30" rows="10"></textarea>
         <br>
@@ -24,7 +28,6 @@
 </body>
 
 <script>
-    $(document).ready(function() {
 
         var conn = new WebSocket('ws://localhost:8080')
         conn.onopen = function(e) {
@@ -35,14 +38,20 @@
             console.log(e.data);
             $('#chat').append(e.data+'&#10;');
         };
+        
 
         $("#send").click(function(){
             let mesage = document.getElementById('mesage');
-            conn.send(mesage.value);
+            sendMessage(mesage.value);
         })
 
-    })
+        function subscribe(channel) {
+            conn.send(JSON.stringify({command: "subscribe", channel: channel}));
+        }
 
+        function sendMessage(msg) {
+            conn.send(JSON.stringify({command: "message", message: msg}));
+        }
 
 </script>
 

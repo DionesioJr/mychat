@@ -10,7 +10,50 @@
 </head>
 
 <body>
-    <div>
+
+    <div style="background: mintcream;">
+
+        <p>https://github.com/nielsbaloe/webrtc-php/blob/master/index.html</p>
+        <video width="320" height="240" ></video>
+        <audio width="320" height="240" controls ></audio>
+        <!-- <video  width="320" height="240" controls autoplay></video> -->
+
+        <script>
+            navigator.getMedia = (navigator.getUserMedia ||
+                navigator.webkitGetUserMedia ||
+                navigator.mozGetUserMedia ||
+                navigator.msGetUserMedia);
+
+
+            navigator.getMedia({
+                    video: true,
+                    audio: false
+                },
+                function(stream) {
+                    var video = document.querySelector('video');
+                    video.srcObject = stream;
+
+                    var audio = document.querySelector('audio');
+                    audio.srcObject = stream;
+                    // video.src = vendorUrl.createObjectURL(stream);
+                    // video.src = localMediaStream;
+                    video.play();
+
+                    // video.onloadedmetadata = function(e) {
+                    //     // Faz algo com o vídeo aqui.
+                    //      console.log(e);
+                    // };
+
+                },
+                function(error) {
+                    console.log(error);
+                }
+            );
+        </script>
+
+    </div>
+
+    <div style="margin-top: 15px;">
 
         <span>Informe seu nome: </span><input type="text" name="name" id="name" value="Dionésio Guerra">
         <br>
@@ -31,28 +74,6 @@
 
         var conn = new WebSocket('ws://localhost:8080')
         conn.onopen = function(e) {
-            console.log("Connection established!");
-        };
-
-        conn.onmessage = function(e) {
-            console.log(e.data);
-            $('#chat').append(e.data+'&#10;');
-        };
-        
-
-        $("#send").click(function(){
-            let mesage = document.getElementById('mesage');
-            sendMessage(mesage.value);
-        })
-
-        function subscribe(channel) {
-            conn.send(JSON.stringify({command: "subscribe", channel: channel}));
-        }
-
-        function sendMessage(msg) {
-            conn.send(JSON.stringify({command: "message", message: msg}));
-        }
-
-</script>
+            console.log(" Connection established!"); }; conn.onmessage=function(e) { console.log(e.data); data=JSON.parse(e.data); if(data.message){ $('#chat').append(data.message+'&#10;'); } }; $("#send").click(function(){ let mesage=document.getElementById('mesage'); sendMessage(mesage.value); }); function subscribe(channel) { conn.send(JSON.stringify({command: "subscribe" , channel: channel})); } function sendMessage(msg) { conn.send(JSON.stringify({command: "message" , message: msg})); } </script>
 
 </html>

@@ -23,13 +23,16 @@ class Chat implements MessageComponentInterface
         // Store the new connection to send messages to later
         $this->clients->attach($conn);
         $this->users[$conn->resourceId] = $conn;
-
         echo "New connection! ({$conn->resourceId})\n";
 
-        $data['command'] = 'notification';
-        $data['message'] = "Conection ID: {$conn->resourceId}";
+        
+
+        $data['command'] = 'open';
+        $data['message'] = $conn->resourceId;
         $data = json_encode($data);
         $this->onMessage($conn, $data);
+
+        $this->notification($conn);
     }
 
     public function onMessage(ConnectionInterface $from, $msg)
@@ -53,15 +56,27 @@ class Chat implements MessageComponentInterface
             }
         }
         */
-        
+
 
         $data = json_decode($msg);
 
         switch ($data->command) {
 
+
+            case "open":
+                $message['id'] = $data->message;
+                $message = json_encode($message);
+                $this->users[$from->resourceId]->send($message);
+
+                break;
             case "notification":
-                echo "Send notification to {$from->resourceId}\n";
-                $this->users[$from->resourceId]->send($data->message);
+
+                $message = json_encode($data->message);
+
+                foreach ($this->users as $key => $users) {
+                    $this->users[$key]->send($message);
+                }
+
                 break;
             case "subscribe":
                 $this->subscriptions[$from->resourceId] = $data->channel;
@@ -72,7 +87,11 @@ class Chat implements MessageComponentInterface
                     $target = $this->subscriptions[$from->resourceId];
                     foreach ($this->subscriptions as $id => $channel) {
                         if ($channel == $target && $id != $from->resourceId) {
-                            $this->users[$id]->send($data->message);
+
+                            $response['message'] = $data->message;
+                            $response = json_encode($response);
+
+                            $this->users[$id]->send($response);
                         }
                     }
                 }
@@ -87,6 +106,7 @@ class Chat implements MessageComponentInterface
         unset($this->subscriptions[$conn->resourceId]);
 
         echo "Connection {$conn->resourceId} has disconnected\n";
+        $this->notification($conn);
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e)
@@ -94,5 +114,14 @@ class Chat implements MessageComponentInterface
         echo "An error has occurred: {$e->getMessage()}\n";
 
         $conn->close();
+    }
+
+    public function notification($conn)
+    {
+        $message['settings']['total_users'] = count($this->users);
+        $data['command'] = 'notification';
+        $data['message'] = $message;
+        $data = json_encode($data);
+        $this->onMessage($conn, $data);
     }
 }
